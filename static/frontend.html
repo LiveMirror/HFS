@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<title>HFS 3 front end</title>
+	<!--[if lt IE 9 ]>
+		<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]--> 
+    <script src='//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
+    <script> // if loading jquery from CDN failed, then go local
+        if (typeof $ == "undefined") document.write("<script src='/~/jquery.js'></"+"script>")
+    </script>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="/~/ext/resources/css/ext-all.css" />
+    <script type="text/javascript" src="/~/ext/bootstrap.js"></script>
+    
+    <script>
+    var socket = io.connect(window.location.origin);
+    var curFolder = window.location.pathname;        
+  
+    $(function(){ // dom ready
+/*
+      var grid_file = Ext.create('Ext.grid.Panel', {
+        title: 'File List',
+        region: 'center',
+        store: store_file,
+        columns: [
+            { header: 'Name', width: 170, dataIndex: 'filename' },
+            { header: 'Size', width: 100, dataIndex: 'filesize' },
+            { header: 'Last Modified', width: 200, dataIndex: 'filedate' }
+        ],
+        viewConfig: {
+            stripeRows: true
+        }
+    });
+*/
+        socket.on('connect', function(){ // socket ready
+            getListAndFill();        
+        }); 
+    });
+
+    function getListAndFill() {
+        socket.emit('get list', { path:curFolder }, function(reply){
+            var x = $('#items').empty();
+            for (var fn in reply.items) {
+                var it = reply.items[fn];
+                var url = encodeURI(fn);
+                if (it.type == 'folder') {
+                    url += '/';
+                } 
+                $('<a>').text(fn)
+                    .attr('href', url)
+                    .click(function(){
+                        var h = $(this).attr('href');
+                        if (h.substr(-1) != '/') return true;
+                        console.log(curFolder += h);
+                        getListAndFill();
+                        return false;
+                    })
+                    .appendTo($('<li>').appendTo(x));                
+            }
+        });
+        }            
+    </script>
+</head>
+<body>
+<h1>ciao</h1>
+<ul id='items'></ul>
+</body>
+</html>
